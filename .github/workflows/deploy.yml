@@ -1,0 +1,42 @@
+name: Deploy to R2
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "デプロイ先の環境を選択"
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+
+env:
+  R2_ENDPOINT: https://${{ secrets.CLOUDFLARE_ACCOUNT_ID }}.r2.cloudflarestorage.com
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set bucket name
+        id: bucket
+        run: |
+          if [ "${{ github.event.inputs.environment }}" = "prod" ]; then
+            echo "name=admel-webview-games" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=admel-webview-games-dev" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload to R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.CLOUDFLARE_R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.CLOUDFLARE_R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+        run: |
+          aws s3 cp index.html \
+            "s3://${{ steps.bucket.outputs.name }}/games/2048/index.html" \
+            --endpoint-url "${{ env.R2_ENDPOINT }}" \
+            --content-type "text/html"
