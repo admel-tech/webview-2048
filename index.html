@@ -1036,6 +1036,28 @@
                 margin-top: 30px !important;
             }
         }
+        .bgm-button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            background: #8f7a66;
+            color: #f9f6f2;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .bgm-button:active {
+            background: #776e65;
+        }
     </style>
 </head>
 
@@ -1097,6 +1119,11 @@
 
 
     </div>
+
+    <audio id="bgm" loop preload="auto">
+        <source src="bgm.mp3" type="audio/mpeg">
+    </audio>
+    <button id="bgmToggle" class="bgm-button" aria-label="Toggle BGM">&#x1f508;</button>
 
     <script>Function.prototype.bind = Function.prototype.bind || function (target) {
             var self = this;
@@ -1976,6 +2003,47 @@
         GameManager.prototype.positionsEqual = function (first, second) {
             return first.x === second.x && first.y === second.y;
         };
+
+        // BGM Controller
+        (function () {
+            var bgm = document.getElementById('bgm');
+            var btn = document.getElementById('bgmToggle');
+            var playing = false;
+            var muted = false;
+
+            function startBGM() {
+                if (!playing) {
+                    bgm.volume = 0.3;
+                    bgm.play().then(function () {
+                        playing = true;
+                        btn.innerHTML = '\u{1F50A}';
+                    }).catch(function () { });
+                }
+            }
+
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                if (!playing) {
+                    startBGM();
+                    return;
+                }
+                muted = !muted;
+                bgm.muted = muted;
+                btn.innerHTML = muted ? '\u{1F508}' : '\u{1F50A}';
+            });
+
+            // Auto-start on first user interaction
+            var events = ['touchstart', 'click', 'keydown'];
+            function onFirstInteraction() {
+                startBGM();
+                events.forEach(function (ev) {
+                    document.removeEventListener(ev, onFirstInteraction);
+                });
+            }
+            events.forEach(function (ev) {
+                document.addEventListener(ev, onFirstInteraction);
+            });
+        })();
 
         // Wait till the browser is ready to render the game (avoids glitches)
         window.requestAnimationFrame(function () {

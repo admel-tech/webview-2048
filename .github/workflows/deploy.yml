@@ -36,7 +36,8 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.CLOUDFLARE_R2_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: auto
         run: |
-          aws s3 cp index.html \
-            "s3://${{ steps.bucket.outputs.name }}/games/2048/index.html" \
+          aws s3 sync . \
+            "s3://${{ steps.bucket.outputs.name }}/games/2048/" \
             --endpoint-url "${{ env.R2_ENDPOINT }}" \
-            --content-type "text/html"
+            --exclude ".git/*" \
+            --exclude ".github/*"
